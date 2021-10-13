@@ -2,7 +2,6 @@
 // write your javascript code here.
 // feel free to change the pre-set attributes as you see fit
 
-/*
 let margin = {
     top: 60,
     left: 50,
@@ -13,7 +12,7 @@ let margin = {
   height = 500 - margin.top - margin.bottom;
 
 //SVG that will hold the visualization 
-let svg1 = d3.select('#d3-container')
+var svg1 = d3.select('#d3-container')
   .append('svg')
   .attr('preserveAspectRatio', 'xMidYMid meet') // this will scale your visualization according to the size of its parent element and the page.
   .attr('width', '60%') // this is now required by Chrome to ensure the SVG shows up at all
@@ -25,56 +24,39 @@ let svg1 = d3.select('#d3-container')
 const w = 500;
 const h = 500;
 const padding = 60;
-*/
 
-d3.csv("data.csv", function(error, data) {
-        if (error) {
-            throw error;
-        }
 
-const width = 900;
-const height = 450;
-const margin = { top: 50, bottom: 50, left: 50, right: 50 };
+// Parse the data
+d3.csv("data/data.csv").then(function(data) {
 
-const svg = d3.select('#d3-container')
-  .append('svg')
-  .attr('width', width - margin.left - margin.right)
-  .attr('height', height - margin.top - margin.bottom)
-  .attr("viewBox", [0, 0, width, height]);
+// X axis
+var x = d3.scaleBand()
+  .range([ 0, width ])
+  .domain(data.map(function(d) { return d.X; }))
+  .padding(0.2);
+svg1.append("g")
+  .attr("transform", "translate(0," + height + ")")
+  .call(d3.axisBottom(x))
+  .selectAll("text")
+    .attr("transform", "translate(-10,0)rotate(-45)")
+    .style("text-anchor", "end");
 
-const x = d3.scaleBand()
-  .domain(d3.range(data.length))
-  .padding(0.1)
-
-const y = d3.scaleLinear()
+// Add Y axis
+var y = d3.scaleLinear()
   .domain([0, 100])
-  .range([height - margin.bottom, margin.top])
+  .range([ height, 0]);
+svg1.append("g")
+  .call(d3.axisLeft(y));
 
-svg
-  .append("g")
-  .attr("fill", 'royalblue')
-  .selectAll("rect")
-  .data(data.sort((a, b) => d3.descending(a.score, b.score)))
-  .join("rect")
-    .attr("x", (d, i) => x(i))
-    .attr("y", d => y(d.score))
-    .attr('title', (d) => d.score)
-    .attr("class", "rect")
-    .attr("height", d => y(0) - y(d.score))
-    .attr("width", x.bandwidth());
+// Bars
+svg1.selectAll("mybar")
+  .data(data)
+  .enter()
+  .append("rect")
+    .attr("x", function(d) { return x(d.X); })
+    .attr("y", function(d) { return y(d.Y); })
+    .attr("width", x.bandwidth())
+    .attr("height", function(d) { return height - y(d.Y); })
+    .attr("fill", "#69b3a2")
 
-function yAxis(g) {
-  g.attr("transform", `translate(${margin.left}, 0)`)
-    .call(d3.axisLeft(y).ticks(null, data.format))
-    .attr("font-size", '20px')
-}
-
-function xAxis(g) {
-  g.attr("transform", `translate(0,${height - margin.bottom})`)
-    .call(d3.axisBottom(x).tickFormat(i => data[i].name))
-    .attr("font-size", '20px')
-}
-
-svg.append("g").call(xAxis);
-svg.append("g").call(yAxis);
-svg.node();
+})
