@@ -59,4 +59,6 @@ svg1.selectAll("mybar")
     .attr("height", function(d) { return height - y(d.Y); })
     .attr("fill", "#69b3a2")
 
+
+
 })
